@@ -1,7 +1,10 @@
 <template>
     <div>
         <button @click="$router.push('/')">Main</button>
-        <button @click="$router.push('/users')">Users</button>
+        <input v-model="blockNumberOrHash" placeholder="Enter block number or hash" />
+        <button @click="$router.push(`/blocks/${blockNumberOrHash}`)">Find block</button>
+        <input v-model="transactionHash" placeholder="Enter transaction hash" />
+        <button @click="$router.push(`/transactions/${transactionHash}`)">Find transaction</button>
     </div>
   </template>
   
@@ -9,7 +12,13 @@
   
   
   export default {
-    name: "navbar-item"
+    name: "navbar-item",
+    data(){
+      return {
+        blockNumberOrHash: "",
+        transactionHash: ""
+      }
+    }
   }
   
   </script>

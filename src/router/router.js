@@ -1,7 +1,7 @@
 import {createRouter, createWebHistory} from "vue-router"
 import MainPage from "@/pages/MainPage.vue"
-import UsersPage from "@/pages/UsersPage.vue"
-import UserIdPage from "@/pages/UserIdPage.vue"
+import BlockDetailPage from "@/pages/BlockDetailPage.vue"
+import TransactionDetailPage from "@/pages/TransactionDetailPage.vue"
 
 const routes = [
     {
@@ -9,12 +9,12 @@ const routes = [
         component: MainPage
     },
     {
-        path: '/users',
-        component: UsersPage
+        path: '/blocks/:id',
+        component: BlockDetailPage
     },
     {
-        path: '/users/:id',
-        component: UserIdPage
+        path: '/transactions/:id',
+        component: TransactionDetailPage
     }
 ]
 

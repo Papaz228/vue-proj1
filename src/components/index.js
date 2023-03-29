@@ -1,11 +1,12 @@
-import User from "@/components/User.vue"
-import UsersList from "@/components/UsersList.vue"
-import UserAdd from "@/components/UserAdd.vue"
 import Navbar from "@/components/Navbar.vue"
+import BlockList from "@/components/BlockList.vue"
+import BlockItem from "@/components/BlockItem.vue"
+import TransactionItem from "@/components/TransactionItem.vue"
+
 
 export default[
-    User,
-    UsersList,
-    UserAdd,
-    Navbar
+    Navbar,
+    BlockItem,
+    BlockList,
+    TransactionItem
 ]
