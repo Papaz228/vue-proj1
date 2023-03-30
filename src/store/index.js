@@ -1,41 +1,169 @@
 import {createStore} from "vuex"
 const Web3 = require('web3')
-const web3 = new Web3('wss://eth-goerli.g.alchemy.com/v2/JBULJH-wvlRUC7PvLfTZ9vxYducqpMX0')
+import {ABI} from "@/contracts/Example.abi.js"
+import {bytecode} from "@/contracts/Example.bin.js"
+
+
 
 export default createStore({
   state:{
-    blocks: []
+    web3Wallet: {},
+    wallet: {
+      address: "",
+      chainId: "",
+      chain: ""
+    },
+    contractAddress: "",
+    myContract: {},
+    txHash: ""
   },
 
   getters:{
   },
 
   mutations:{
-    addBlock(state, newBlock){
-      state.blocks.unshift(newBlock)
-    }
   },
 
   actions:{
-    async getLastBlock({commit}) {
-      web3.eth.subscribe("newBlockHeaders")
-      .on('data', block => {
-        let newBlock = {
-          hash: block.hash,
-          number: block.number,
-          tx: block.transactions
+    async connectWallet({state}){
+      if (typeof window.ethereum !== 'undefined') {
+        if (window.ethereum.isMetaMask === true) {
+          if (window.ethereum.isConnected() === true) {
+            console.log("Metamask connected!")
+           }
+           else {
+            console.log("Metamask is not connected!")
+            await window.ethereum.enable()
+            console.log("Metamask connected!")
+           }
+
+           window.ethereum.request({method: "eth_requestAccounts"}).then(accounts => {
+            state.wallet.address = accounts[0]
+          })
+
+            state.web3Wallet = new Web3(window.ethereum)
+
+            state.wallet.chainId = await state.web3Wallet.eth.net.getId()
+            state.wallet.chain = await state.web3Wallet.eth.net.getNetworkType()
+
+          window.ethereum.on('accountsChanged', (accounts) =>{
+            state.wallet.address = accounts[0]
+          })
+
+          window.ethereum.on('chainChanged', async () =>{
+            state.web3Wallet = new Web3(window.ethereum)
+            state.wallet.chainId = await state.web3Wallet.eth.net.getId()
+            state.wallet.chain = await state.web3Wallet.eth.net.getNetworkType()
+          })
+         }         
+       }
+        else{
+        alert("Ethereum client is not installed!")
         }
-        commit("addBlock", newBlock)
+    },
+    async getTransaction({state}, transactionHash){
+      state.web3Wallet = new Web3(window.ethereum)
+      return await state.web3Wallet.eth.getTransaction(transactionHash)
+    },
+    async sendTransaction({state}, to, value){
+      value = state.web3Wallet.utils.numberToHex(value)
+      await window.ethereum.request({
+        method: "eth_sendTransaction",
+        params: [{
+        from: state.wallet.address,
+        to: to,
+        value: value
+        }]
+        }).then(hash => {
+          state.txHash = hash
+          })
+    },
+    async deployContract({state}){
+      const receipt = await window.ethereum.request({
+        method: "eth_sendTransaction",
+        params: [{
+          from: state.wallet.address,
+          data: bytecode
+        }]
       })
+      
+      // Wait for the transaction to be confirmed
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const txReceipt = await window.ethereum.request({
+          method: 'eth_getTransactionReceipt',
+          params: [receipt]
+        });
+      
+        if (txReceipt !== null) {
+          state.contractAddress = txReceipt.contractAddress;
+          console.log("Contract deployed at address: ", state.contractAddress);
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      state.myContract = new state.web3Wallet.eth.Contract(ABI, state.contractAddress)
     },
-    // eslint-disable-next-line no-unused-vars
-    async getBlock({commit}, blockNumOrHash){
-      return await web3.eth.getBlock(blockNumOrHash)
+    async setX({state}, number){
+        let txData = state.myContract.methods.setX(number).encodeABI()
+
+        await window.ethereum.request({
+          method: "eth_sendTransaction",
+          params: [{
+            from: state.wallet.address,
+            to: state.contractAddress,
+            data: txData
+          }]
+          }).then(hash => {
+            state.txHash = hash
+            })
     },
-    // eslint-disable-next-line no-unused-vars
-    async getTransaction({commit}, transactionHash){
-      return await web3.eth.getTransaction(transactionHash)
-    }
+    async setStr({state}, str){
+      let txData = state.myContract.methods.setStr(str).encodeABI()
+
+      await window.ethereum.request({
+        method: "eth_sendTransaction",
+        params: [{
+          from: state.wallet.address,
+          to: state.contractAddress,
+          data: txData
+        }]
+        }).then(hash => {
+          state.txHash = hash
+          })
+  },
+  async addElem({state}, elem){
+    let txData = state.myContract.methods.addElem(elem).encodeABI()
+
+    await window.ethereum.request({
+      method: "eth_sendTransaction",
+      params: [{
+        from: state.wallet.address,
+        to: state.contractAddress,
+        data: txData
+      }]
+      }).then(hash => {
+        state.txHash = hash
+        })
+},
+
+  async getX({state}){
+    console.log(state.contractAddress)
+    return await state.myContract.methods.x().call({from: state.wallet.address}).then(hash => {
+      state.txHash = hash
+      })
+  },
+  async getStr({state}){
+    return await state.myContract.methods.str().call({from: state.wallet.address}).then(hash => {
+      state.txHash = hash
+      })
+  },
+  async getData({state}, index){
+    return await state.myContract.methods.data(index).call({from: state.wallet.address}).then(hash => {
+      state.txHash = hash
+      })
+  },
+
   },
 
   modules:{

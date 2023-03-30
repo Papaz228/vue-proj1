@@ -1,6 +1,6 @@
 <template>
     <div>Transaction Detail Page</div>
-    <transaction-item :transaction="transaction"></transaction-item>
+    <div>{{ transaction }}</div>
 </template>
 <script>
 import { mapActions } from 'vuex'

@@ -1,6 +1,5 @@
 import {createRouter, createWebHistory} from "vue-router"
 import MainPage from "@/pages/MainPage.vue"
-import BlockDetailPage from "@/pages/BlockDetailPage.vue"
 import TransactionDetailPage from "@/pages/TransactionDetailPage.vue"
 
 const routes = [
@@ -9,12 +8,9 @@ const routes = [
         component: MainPage
     },
     {
-        path: '/blocks/:id',
-        component: BlockDetailPage
-    },
-    {
         path: '/transactions/:id',
         component: TransactionDetailPage
+
     }
 ]
 
